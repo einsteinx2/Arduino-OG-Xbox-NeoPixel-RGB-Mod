@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-#define SPEED 4
+#define SPEED 35 // delay in ms between color changes
 
 //Credit to https://gist.github.com/jamesotron/ for original code
 //I simply modified to run 2 LED's and run the colour changes a bit slower
@@ -22,6 +22,8 @@ void setColorRgb(unsigned int red, unsigned int green, unsigned int blue) {
 }
 
 void setup() {
+    Serial.begin(57600);
+
     // Start off with the LED off.
     //setColorRgb(0, 0, 0);
 
@@ -29,31 +31,34 @@ void setup() {
 }
 
 void loop() {
-    unsigned int rgbColour[3];
+    // Start off with blue.
+    unsigned int rgbColor[3] = { 0, 0, 255};
 
-    // Start off with red.
-    rgbColour[0] = 255;
-    rgbColour[1] = 0;
-    rgbColour[2] = 0;  
+    // Repeat forever
+    while(1) {
+        // Choose the colours to increment and decrement (fade from blue > green > red)
+        for (int decColour = 2; decColour >= 0; decColour -= 1) {
+            int incColour = decColour == 0 ? 2 : decColour - 1;
 
-    // Choose the colours to increment and decrement.
-    for (int decColour = 0; decColour < 3; decColour += 1) {
-        int incColour = decColour == 2 ? 0 : decColour + 1;
+            // Cross-fade the two colours.
+            for(int i = 0; i < 255; i += 1) {
+                // Increase delay when on a solid color so it seems smoother (otherwise it will almost immediately change color)
+                delay(SPEED);
+                if (rgbColor[0] == 255 || rgbColor[1] == 255 || rgbColor[2] == 255) {
+                    delay(SPEED * 2);
+                }
 
-        // cross-fade the two colours.
-        for(int i = 0; i < 255 / SPEED; i += SPEED) {
-            rgbColour[decColour] -= SPEED;
-            rgbColour[incColour] += SPEED;
+                rgbColor[decColour] -= 1;
+                rgbColor[incColour] += 1;
 
-            setColorRgb(rgbColour[0], rgbColour[1], rgbColour[2]);
-            Serial.print("r: ");
-            Serial.print(rgbColour[0]);
-            Serial.print(" g: ");
-            Serial.print(rgbColour[1]);
-            Serial.print(" b: ");
-            Serial.println(rgbColour[2]);
-            delay(100);
+                setColorRgb(rgbColor[0], rgbColor[1], rgbColor[2]);
+                Serial.print("r: ");
+                Serial.print(rgbColor[0]);
+                Serial.print(" g: ");
+                Serial.print(rgbColor[1]);
+                Serial.print(" b: ");
+                Serial.println(rgbColor[2]);
+            }
         }
     }
-    delay(100);
 }
