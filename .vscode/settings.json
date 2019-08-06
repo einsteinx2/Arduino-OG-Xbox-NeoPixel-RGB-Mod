@@ -1,0 +1,6 @@
+{
+    "terminal.integrated.env.osx": {
+        "PATH": "/Users/bbaron/.platformio/penv/bin:/Users/bbaron/.platformio/penv:/usr/local/opt/gnu-tar/libexec/gnubin:/usr/local/opt/coreutils/libexec/gnubin:/usr/local/opt/mysql@5.7/bin:/Users/bbaron/.platformio/penv/bin:/Users/bbaron/.yarn/bin:/Users/bbaron/.config/yarn/global/node_modules/.bin:/usr/local/bin:/usr/local/sbin:/Users/bbaron/bin:/Users/bbaron/Android/sdk/emulator:/Users/bbaron/Android/sdk/tools:/Users/bbaron/Android/sdk/platform-tools:/Users/bbaron/Android/sdk/../ndk:/bin:/Users/bbaron/workspaceg/bin:/Users/bbaron/.jenv/shims:/Users/bbaron/.jenv/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/usr/local/share/dotnet:/opt/X11/bin:~/.dotnet/tools:/Library/Frameworks/Mono.framework/Versions/Current/Commands:/usr/local/opt/node@10/bin",
+        "PLATFORMIO_CALLER": "vscode"
+    }
+}
