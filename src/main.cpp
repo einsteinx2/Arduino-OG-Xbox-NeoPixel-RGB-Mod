@@ -1,64 +1,76 @@
 #include <Arduino.h>
+#include <FastLED.h>
 
-#define SPEED 35 // delay in ms between color changes
+#define DEBUG false
 
-//Credit to https://gist.github.com/jamesotron/ for original code
-//I simply modified to run 2 LED's and run the colour changes a bit slower
-// const int redPin1 = 6;
-// const int greenPin1 = 5;
-// const int bluePin1 = 3;
+const uint8_t startHue = 160;
+const unsigned long delayMillis = 15; // delay in ms between rgb changes
 
-const int redPin2 = 10;
-const int greenPin2 = 11;
-const int bluePin2 = 9;
+// Common Cathode RGB LEDs
+//
+// LED 1
+const uint8_t redPin1 = 3;
+const uint8_t greenPin1 = 5;
+const uint8_t bluePin1 = 6;
+// LED 2
+const uint8_t redPin2 = 9;
+const uint8_t greenPin2 = 10;
+const uint8_t bluePin2 = 11;
 
-void setColorRgb(unsigned int red, unsigned int green, unsigned int blue) {
-    // analogWrite(redPin1, red);
-    // analogWrite(greenPin1, green);
-    // analogWrite(bluePin1, blue);
-    analogWrite(redPin2, red);
-    analogWrite(greenPin2, green);
-    analogWrite(bluePin2, blue);
+// Addressable LEDs
+#define LED_TYPE NEOPIXEL
+#define NUM_LEDS 4
+#define DEFAULT_BRIGHTNESS 255
+#define DATA_PIN 13
+CRGB leds[NUM_LEDS];
+
+void setColor(CRGB rgb) {
+    // Common Cathode RGB LEDs
+    analogWrite(redPin1, rgb.r); analogWrite(greenPin1, rgb.g); analogWrite(bluePin1, rgb.b);
+    analogWrite(redPin2, rgb.r); analogWrite(greenPin2, rgb.g); analogWrite(bluePin2, rgb.b);
+
+    // Addressable LEDs
+    fill_solid(leds, NUM_LEDS, rgb);
+
+    #if DEBUG
+    Serial.print("r: ");
+    Serial.print(rgb.r);
+    Serial.print(" g: ");
+    Serial.print(rgb.g);
+    Serial.print(" b: ");
+    Serial.println(rgb.b);
+    #endif
+
+    // Add extra delay when on a solid rgb so it seems smoother (otherwise it will almost immediately change rgb)
+    if (rgb.r == 255 || rgb.g == 255 || rgb.b == 255) {
+        FastLED.delay(delayMillis * 2);
+    }
 }
 
 void setup() {
+    #if DEBUG
     Serial.begin(57600);
+    #endif
 
-    // Start off with the LED off.
-    //setColorRgb(0, 0, 0);
-
-    setColorRgb(0, 0, 0);
+    FastLED.addLeds<LED_TYPE, DATA_PIN>(leds, NUM_LEDS);
+    FastLED.setBrightness(DEFAULT_BRIGHTNESS);
 }
 
+// Better color smoothing code from https://www.reddit.com/r/arduino/comments/5o552l/fastled_how_can_i_create_a_smoothnonchoppy_color/dcgnuje/
 void loop() {
-    // Start off with blue.
-    unsigned int rgbColor[3] = { 0, 0, 255};
+    static CRGB currentColor = CRGB(CHSV(startHue, 255, 255));
+    static CRGB lastColor = currentColor;
+    static CRGB targetColor = currentColor;
+    static uint8_t hue = startHue;
+    static uint8_t step = 0;
 
-    // Repeat forever
-    while(1) {
-        // Choose the colours to increment and decrement (fade from blue > green > red)
-        for (int decColour = 2; decColour >= 0; decColour -= 1) {
-            int incColour = decColour == 0 ? 2 : decColour - 1;
-
-            // Cross-fade the two colours.
-            for(int i = 0; i < 255; i += 1) {
-                // Increase delay when on a solid color so it seems smoother (otherwise it will almost immediately change color)
-                delay(SPEED);
-                if (rgbColor[0] == 255 || rgbColor[1] == 255 || rgbColor[2] == 255) {
-                    delay(SPEED * 2);
-                }
-
-                rgbColor[decColour] -= 1;
-                rgbColor[incColour] += 1;
-
-                setColorRgb(rgbColor[0], rgbColor[1], rgbColor[2]);
-                Serial.print("r: ");
-                Serial.print(rgbColor[0]);
-                Serial.print(" g: ");
-                Serial.print(rgbColor[1]);
-                Serial.print(" b: ");
-                Serial.println(rgbColor[2]);
-            }
-        }
+    currentColor = blend(lastColor, targetColor, 255 / 8 * step++);
+    if(step > 8) {
+        step = 0;
+        lastColor = targetColor;
+        hsv2rgb_rainbow(CHSV(hue++, 255, 255), targetColor);
     }
+    setColor(currentColor);
+
+    FastLED.delay(delayMillis);
 }
